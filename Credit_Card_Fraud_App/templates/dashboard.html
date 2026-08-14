@@ -15,14 +15,18 @@
             --bg-color: #f8fafc;
             --card-bg: #ffffff;
             --text-color: #0f172a;
+            --sub-text: #64748b;
             --border-color: #e2e8f0;
+            --table-hover: #f1f5f9;
         }
 
         [data-theme="dark"] {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
+            --bg-color: #0b1329;
+            --card-bg: #131f37;
             --text-color: #f8fafc;
-            --border-color: #334155;
+            --sub-text: #94a3b8 !important; /* Bright high-contrast text for metrics */
+            --border-color: #1e293b;
+            --table-hover: #1e293b;
         }
 
         /* WCAG AAA Accessible Text Highlight */
@@ -42,14 +46,30 @@
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .metric-card {
-            padding: 16px;
-            border-radius: 10px;
+            padding: 18px;
+            border-radius: 12px;
             background: var(--card-bg);
             border: 1px solid var(--border-color);
+        }
+
+        .sub-label {
+            color: var(--sub-text) !important;
+            font-weight: 500;
+        }
+
+        /* Dark Mode Compatible Table */
+        .custom-table {
+            color: var(--text-color) !important;
+            background-color: var(--card-bg) !important;
+        }
+        .custom-table th, .custom-table td {
+            background-color: var(--card-bg) !important;
+            color: var(--text-color) !important;
+            border-color: var(--border-color) !important;
         }
     </style>
 </head>
@@ -70,13 +90,13 @@
         </div>
     </div>
 
-    <!-- 📊 Summary Metrics Band -->
+    <!-- 📊 Summary Metrics Band (Fixed Contrast) -->
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <div class="metric-card d-flex align-items-center gap-3">
                 <div class="fs-2 text-primary"><i class="fa-solid fa-list-check"></i></div>
                 <div>
-                    <div class="text-muted small" data-en="Total Scanned" data-bn="মোট স্ক্যান করা হয়েছে">Total Scanned</div>
+                    <div class="sub-label small" data-en="Total Scanned" data-bn="মোট স্ক্যান করা হয়েছে">Total Scanned</div>
                     <div class="fs-4 fw-bold" id="metricTotal">1,420</div>
                 </div>
             </div>
@@ -85,7 +105,7 @@
             <div class="metric-card d-flex align-items-center gap-3">
                 <div class="fs-2 text-info"><i class="fa-solid fa-gauge-high"></i></div>
                 <div>
-                    <div class="text-muted small" data-en="System Latency" data-bn="সিস্টেম লেটেন্সি">System Latency</div>
+                    <div class="sub-label small" data-en="System Latency" data-bn="সিস্টেম লেটেন্সি">System Latency</div>
                     <div class="fs-4 fw-bold">24ms</div>
                 </div>
             </div>
@@ -94,7 +114,7 @@
             <div class="metric-card d-flex align-items-center gap-3">
                 <div class="fs-2 text-success"><i class="fa-solid fa-shield-check"></i></div>
                 <div>
-                    <div class="text-muted small" data-en="Threat Level" data-bn="ঝুঁকির মাত্রা">Threat Level</div>
+                    <div class="sub-label small" data-en="Threat Level" data-bn="ঝুঁকির মাত্রা">Threat Level</div>
                     <div class="fs-4 fw-bold text-success" data-en="Low" data-bn="কম">Low</div>
                 </div>
             </div>
@@ -139,7 +159,6 @@
                     </div>
                 </form>
 
-                <!-- Result Alert -->
                 <div id="resultBox" class="alert mt-3 d-none text-center fw-bold"></div>
             </div>
         </div>
@@ -148,21 +167,21 @@
         <div class="col-lg-5">
             <div class="dashboard-card p-4 h-100 d-flex flex-column justify-content-center align-items-center">
                 <h6 class="fw-bold mb-3" data-en="Risk Analysis Breakdown" data-bn="ঝুঁকি বিশ্লেষণের গ্রাফ">Risk Analysis Breakdown</h6>
-                <div style="width: 250px; height: 250px;">
+                <div style="width: 240px; height: 240px;">
                     <canvas id="riskChart"></canvas>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 📜 Recent Transactions Table -->
+    <!-- 📜 Recent Transactions Table (Fixed Dark Mode Style) -->
     <div class="dashboard-card p-4 mt-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="fw-bold m-0" data-en="Recent Transactions History" data-bn="সাম্প্রতিক লেনদেনের ইতিহাস">Recent Transactions History</h5>
             <input type="text" id="tableSearch" class="form-control form-control-sm w-auto" placeholder="Search..." onkeyup="filterTable()">
         </div>
         <div class="table-responsive">
-            <table class="table table-hover align-middle" id="txTable">
+            <table class="table custom-table align-middle m-0" id="txTable">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -193,7 +212,6 @@
     </div>
 
     <script>
-        // Chart.js Setup
         const ctx = document.getElementById('riskChart').getContext('2d');
         const riskChart = new Chart(ctx, {
             type: 'doughnut',
@@ -207,7 +225,6 @@
             options: { responsive: true, maintainAspectRatio: false }
         });
 
-        // AJAX Prediction Submission
         document.getElementById('predictionForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
@@ -226,7 +243,6 @@
             resBox.classList.add(data.status === 'success' ? 'alert-success' : 'alert-danger');
             resBox.innerText = data.prediction_text;
 
-            // Dynamically append to table
             const tbody = document.getElementById('txTableBody');
             const newRow = `<tr>
                 <td>#TX-${Math.floor(1000 + Math.random() * 9000)}</td>
@@ -238,7 +254,6 @@
             tbody.innerHTML = newRow + tbody.innerHTML;
         });
 
-        // Filter Table
         function filterTable() {
             const input = document.getElementById("tableSearch").value.toUpperCase();
             const rows = document.getElementById("txTableBody").getElementsByTagName("tr");
@@ -247,7 +262,6 @@
             }
         }
 
-        // Theme Toggle
         function toggleTheme() {
             const body = document.body;
             const icon = document.getElementById('dashThemeIcon');
@@ -260,7 +274,6 @@
             }
         }
 
-        // Language Switcher
         let dLang = 'en';
         function toggleDashboardLang() {
             dLang = dLang === 'en' ? 'bn' : 'en';
