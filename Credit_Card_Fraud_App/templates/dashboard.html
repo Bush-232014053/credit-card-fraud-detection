@@ -3,302 +3,272 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Fraud Detection - Interactive Analytics Dashboard</title>
+    <title>Risk Engine Dashboard - FraudGuard AI</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js for interactive graphs -->
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
     <style>
         :root {
-            --primary-color: #4e73df;
-            --success-color: #1cc88a;
-            --danger-color: #e74a3b;
-            --bg-color: #f8f9fc;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #0f172a;
+            --border-color: #e2e8f0;
         }
+
+        [data-theme="dark"] {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --border-color: #334155;
+        }
+
+        /* WCAG AAA Accessible Text Highlight */
+        ::-selection {
+            background-color: #fde047 !important;
+            color: #0f172a !important;
+        }
+
         body {
             background-color: var(--bg-color);
-            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            color: #5a5c69;
-        }
-        .navbar-custom {
-            background-color: #fff;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .card-custom {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            background: #ffffff;
-            margin-bottom: 20px;
-        }
-        .card-header-custom {
-            background-color: #fff;
-            border-bottom: 1px solid #e3e6f0;
-            padding: 15px 20px;
-            border-radius: 12px 12px 0 0;
-        }
-        .btn-predict {
-            background: linear-gradient(135deg, var(--primary-color) 0%, #3a54a8 100%);
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 12px 20px;
-            font-weight: 600;
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             transition: all 0.3s ease;
         }
-        .btn-predict:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(78, 115, 223, 0.4);
-            color: #fff;
+
+        .dashboard-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
-        #result-display-section {
-            display: none;
-            animation: fadeIn 0.5s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        /* Custom Input Styling */
-        .form-control-custom {
-            border-radius: 8px;
-            padding: 10px;
-            border: 1px solid #d1d3e2;
-        }
-        .form-control-custom:focus {
-            border-color: #bac8f3;
-            box-shadow: 0 0 0 0.2rem rgba(78,115,223,.1);
+
+        .metric-card {
+            padding: 16px;
+            border-radius: 10px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
         }
     </style>
 </head>
-<body>
+<body class="p-3 p-md-4">
 
-    <!-- Simple Modern Navbar -->
-    <nav class="navbar navbar-light navbar-custom py-3">
-        <div class="container">
-            <a class="navbar-brand text-primary fw-bold fs-3" href="#">
-                <i class="fa-solid fa-brain me-2"></i>Fraud Guard AI
-            </a>
-            <div class="d-flex align-items-center">
-                <span class="text-muted me-3">Model Status: </span>
-                <span class="badge bg-success rounded-pill px-3 py-2"><i class="fa-solid fa-check-circle me-1"></i> Active</span>
-            </div>
+    <!-- Top Navigation -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="/" class="text-decoration-none fw-bold fs-4 text-primary d-flex align-items-center gap-2">
+            <i class="fa-solid fa-shield-halved"></i> FraudGuard AI
+        </a>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary btn-sm" onclick="toggleDashboardLang()">
+                <i class="fa-solid fa-globe me-1"></i> <span id="dashLang">BN</span>
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" onclick="toggleTheme()">
+                <i class="fa-solid fa-moon" id="dashThemeIcon"></i>
+            </button>
         </div>
-    </nav>
-
-    <div class="container py-5">
-        
-        <!-- ROW 1: Analytics and Performance Summary -->
-        <div class="row g-4 mb-4">
-            <!-- Pie Chart Card: Dataset Composition -->
-            <div class="col-xl-4 col-lg-5">
-                <div class="card card-custom h-100">
-                    <div class="card-header-custom">
-                        <h6 class="m-0 fw-bold text-primary"><i class="fa-solid fa-chart-pie me-2"></i>Dataset Composition</h6>
-                    </div>
-                    <div class="card-body p-4 d-flex flex-column align-items-center justify-content-center">
-                        <div style="height: 250px; width: 250px;">
-                            <canvas id="datasetCompositionChart"></canvas>
-                        </div>
-                        <p class="text-muted small mt-3 text-center">Breakdown of legitimate vs. fraudulent transactions in the model's training data.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Model Performance Card -->
-            <div class="col-xl-8 col-lg-7">
-                <div class="card card-custom h-100">
-                    <div class="card-header-custom">
-                        <h6 class="m-0 fw-bold text-primary"><i class="fa-solid fa-gauge-high me-2"></i>AI Model Metrics</h6>
-                    </div>
-                    <div class="card-body p-4">
-                        <p class="text-muted mb-4">Random Forest classifier performance on unseen test data.</p>
-                        <div class="row text-center">
-                            <div class="col-md-4 mb-3">
-                                <div class="bg-light p-3 rounded-3 border">
-                                    <div class="fs-1 fw-bold text-success">98.5%</div>
-                                    <div class="text-muted small text-uppercase fw-semibold">Accuracy</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <div class="bg-light p-3 rounded-3 border">
-                                    <div class="fs-1 fw-bold" style="color: #6f42c1;">97.2%</div>
-                                    <div class="text-muted small text-uppercase fw-semibold">Precision</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <div class="bg-light p-3 rounded-3 border">
-                                    <div class="fs-1 fw-bold" style="color: #fd7e14;">96.8%</div>
-                                    <div class="text-muted small text-uppercase fw-semibold">Recall</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="alert alert-info mt-3 small" role="alert">
-                            <i class="fa-solid fa-circle-info me-2"></i>These metrics are crucial for minimizing false positives (Precision) and ensuring all fraud is caught (Recall).
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ROW 2: Input and Result Display -->
-        <div class="row g-4">
-            <!-- Form Card: Predict New Transaction -->
-            <div class="col-lg-7">
-                <div class="card card-custom">
-                    <div class="card-header-custom">
-                        <h6 class="m-0 fw-bold text-primary"><i class="fa-solid fa-clipboard-question me-2"></i>Enter Transaction Details</h6>
-                    </div>
-                    <div class="card-body p-4">
-                        <form id="fraudForm">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold text-muted small">Transaction Amount ($)</label>
-                                    <input type="number" step="any" class="form-control form-control-custom" name="Transaction_Amount" placeholder="e.g. 250.50" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold text-muted small">Time Since Last Tx (Min)</label>
-                                    <input type="number" step="any" class="form-control form-control-custom" name="Time_Since_Last_Tx" placeholder="e.g. 15.2" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold text-muted small">Distance From Last Tx (Km)</label>
-                                    <input type="number" step="any" class="form-control form-control-custom" name="Distance_From_Last_Tx" placeholder="e.g. 10.5" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold text-muted small">Distance From Home (Km)</label>
-                                    <input type="number" step="any" class="form-control form-control-custom" name="Distance_From_Home" placeholder="e.g. 25.0" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold text-muted small">Daily Limit Used (%)</label>
-                                    <input type="number" step="any" class="form-control form-control-custom" name="Daily_Limit_Used" placeholder="e.g. 45.5" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-semibold text-muted small">Card Age (Days)</label>
-                                    <input type="number" class="form-control form-control-custom" name="Card_Age_Days" placeholder="e.g. 500" required>
-                                </div>
-                            </div>
-                            <div class="mt-4">
-                                <button type="submit" class="btn btn-predict w-100 fs-5" id="submitBtn">
-                                    <span id="btnText"><i class="fa-solid fa-magnifying-glass me-2"></i>Start AI Analysis</span>
-                                    <span id="btnSpinner" class="spinner-border spinner-border-sm ms-2" style="display: none;"></span>
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Result Display Card -->
-            <div class="col-lg-5" id="result-display-section">
-                <div class="card card-custom h-100">
-                    <div class="card-header-custom">
-                        <h6 class="m-0 fw-bold text-primary"><i class="fa-solid fa-robot me-2"></i>Analysis Result</h6>
-                    </div>
-                    <div class="card-body p-4 text-center d-flex flex-column align-items-center justify-content-center">
-                        <div id="result-icon" class="mb-3" style="font-size: 5rem;"></div>
-                        <h3 id="result-status" class="fw-bold mb-2"></h3>
-                        <p id="result-text" class="text-muted"></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
     </div>
 
-    <!-- JavaScript and Chart Configuration -->
+    <!-- 📊 Summary Metrics Band -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="metric-card d-flex align-items-center gap-3">
+                <div class="fs-2 text-primary"><i class="fa-solid fa-list-check"></i></div>
+                <div>
+                    <div class="text-muted small" data-en="Total Scanned" data-bn="মোট স্ক্যান করা হয়েছে">Total Scanned</div>
+                    <div class="fs-4 fw-bold" id="metricTotal">1,420</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="metric-card d-flex align-items-center gap-3">
+                <div class="fs-2 text-info"><i class="fa-solid fa-gauge-high"></i></div>
+                <div>
+                    <div class="text-muted small" data-en="System Latency" data-bn="সিস্টেম লেটেন্সি">System Latency</div>
+                    <div class="fs-4 fw-bold">24ms</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="metric-card d-flex align-items-center gap-3">
+                <div class="fs-2 text-success"><i class="fa-solid fa-shield-check"></i></div>
+                <div>
+                    <div class="text-muted small" data-en="Threat Level" data-bn="ঝুঁকির মাত্রা">Threat Level</div>
+                    <div class="fs-4 fw-bold text-success" data-en="Low" data-bn="কম">Low</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area Centered Grid -->
+    <div class="row g-4 justify-content-center">
+        <!-- Centered Transaction Input Box -->
+        <div class="col-lg-7">
+            <div class="dashboard-card p-4">
+                <h5 class="fw-bold mb-3" data-en="Enter Transaction Details" data-bn="লেনদেনের বিবরণ লিখুন">Enter Transaction Details</h5>
+                <form id="predictionForm" class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold" data-en="Transaction Amount ($)" data-bn="লেনদেনের পরিমাণ ($)">Transaction Amount ($)</label>
+                        <input type="number" step="any" name="Transaction_Amount" class="form-control" placeholder="e.g. 250.00" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold" data-en="Time Since Last Tx (min)" data-bn="শেষ লেনদেনের সময় (মিনিট)">Time Since Last Tx (min)</label>
+                        <input type="number" step="any" name="Time_Since_Last_Tx" class="form-control" placeholder="e.g. 15" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold" data-en="Distance From Last Tx (km)" data-bn="শেষ লেনদেন থেকে দূরত্ব (কিমি)">Distance From Last Tx (km)</label>
+                        <input type="number" step="any" name="Distance_From_Last_Tx" class="form-control" placeholder="e.g. 5" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold" data-en="Distance From Home (km)" data-bn="বাড়ি থেকে দূরত্ব (কিমি)">Distance From Home (km)</label>
+                        <input type="number" step="any" name="Distance_From_Home" class="form-control" placeholder="e.g. 12" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold" data-en="Daily Limit Used (%)" data-bn="দৈনিক সীমা ব্যবহার (%)">Daily Limit Used (%)</label>
+                        <input type="number" step="any" name="Daily_Limit_Used" class="form-control" placeholder="e.g. 45" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold" data-en="Card Age (Days)" data-bn="কার্ডের মেয়াদ (দিন)">Card Age (Days)</label>
+                        <input type="number" step="any" name="Card_Age_Days" class="form-control" placeholder="e.g. 365" required>
+                    </div>
+                    <div class="col-12 mt-4">
+                        <button type="submit" class="btn btn-primary w-100 fw-bold py-2" id="submitBtn">
+                            <i class="fa-solid fa-microchip me-1"></i> <span data-en="Analyze Risk" data-bn="ঝুঁকি পরীক্ষা করুন">Analyze Risk</span>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Result Alert -->
+                <div id="resultBox" class="alert mt-3 d-none text-center fw-bold"></div>
+            </div>
+        </div>
+
+        <!-- Risk Distribution Visual Chart -->
+        <div class="col-lg-5">
+            <div class="dashboard-card p-4 h-100 d-flex flex-column justify-content-center align-items-center">
+                <h6 class="fw-bold mb-3" data-en="Risk Analysis Breakdown" data-bn="ঝুঁকি বিশ্লেষণের গ্রাফ">Risk Analysis Breakdown</h6>
+                <div style="width: 250px; height: 250px;">
+                    <canvas id="riskChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📜 Recent Transactions Table -->
+    <div class="dashboard-card p-4 mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold m-0" data-en="Recent Transactions History" data-bn="সাম্প্রতিক লেনদেনের ইতিহাস">Recent Transactions History</h5>
+            <input type="text" id="tableSearch" class="form-control form-control-sm w-auto" placeholder="Search..." onkeyup="filterTable()">
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle" id="txTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th data-en="Amount" data-bn="পরিমাণ">Amount</th>
+                        <th data-en="Dist from Home" data-bn="দূরত্ব">Dist from Home</th>
+                        <th data-en="Daily Limit" data-bn="দৈনিক সীমা">Daily Limit</th>
+                        <th data-en="Status" data-bn="স্ট্যাটাস">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="txTableBody">
+                    <tr>
+                        <td>#TX-9021</td>
+                        <td>$120.00</td>
+                        <td>4.2 km</td>
+                        <td>22%</td>
+                        <td><span class="badge bg-success" data-en="Safe" data-bn="নিরাপদ">Safe</span></td>
+                    </tr>
+                    <tr>
+                        <td>#TX-9022</td>
+                        <td>$1,550.00</td>
+                        <td>210 km</td>
+                        <td>88%</td>
+                        <td><span class="badge bg-danger" data-en="Fraud Alert" data-bn="জালিয়াতি সংকেত">Fraud Alert</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <script>
-        // --- 1. Static Pie Chart Configuration ---
-        const compositionCtx = document.getElementById('datasetCompositionChart').getContext('2d');
-        new Chart(compositionCtx, {
-            type: 'pie',
+        // Chart.js Setup
+        const ctx = document.getElementById('riskChart').getContext('2d');
+        const riskChart = new Chart(ctx, {
+            type: 'doughnut',
             data: {
-                labels: ['Legitimate', 'Fraudulent'],
+                labels: ['Safe Transactions', 'Fraud Flagged'],
                 datasets: [{
-                    data: [85, 15], // Static sample data (update if needed)
-                    backgroundColor: ['#1cc88a', '#e74a3b'],
-                    hoverBackgroundColor: ['#17a673', '#be2617'],
-                    borderWidth: 1,
+                    data: [1380, 40],
+                    backgroundColor: ['#22c55e', '#ef4444']
                 }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { boxWidth: 12, padding: 20 }
-                    }
-                }
-            }
+            options: { responsive: true, maintainAspectRatio: false }
         });
 
-        // --- 2. Dynamic Form Handling and Result Display ---
-        document.getElementById('fraudForm').addEventListener('submit', async function(e) {
+        // AJAX Prediction Submission
+        document.getElementById('predictionForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
-            const submitBtn = document.getElementById('submitBtn');
-            const btnText = document.getElementById('btnText');
-            const btnSpinner = document.getElementById('btnSpinner');
-            const resultDisplaySection = document.getElementById('result-display-section');
-            const resultIcon = document.getElementById('result-icon');
-            const resultStatus = document.getElementById('result-status');
-            const resultText = document.getElementById('result-text');
+            const btn = document.getElementById('submitBtn');
+            const resBox = document.getElementById('resultBox');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Processing...';
 
-            // Show Loading State
-            btnText.innerText = "Processing...";
-            btnSpinner.style.display = "inline-block";
-            submitBtn.disabled = true;
-            resultDisplaySection.style.display = "none";
-
-            // Collect Form Data
             const formData = new FormData(this);
+            const response = await fetch('/predict', { method: 'POST', body: formData });
+            const data = await response.json();
 
-            try {
-                // Send AJAX Request to Flask
-                const response = await fetch('/predict', {
-                    method: 'POST',
-                    body: formData
-                });
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-microchip me-1"></i> Analyze Risk';
 
-                const data = await response.json();
+            resBox.classList.remove('d-none', 'alert-success', 'alert-danger');
+            resBox.classList.add(data.status === 'success' ? 'alert-success' : 'alert-danger');
+            resBox.innerText = data.prediction_text;
 
-                // Display Result with Animations and Icons
-                resultDisplaySection.style.display = "block";
-                
-                if (data.status === 'success') {
-                    // Safe Transaction
-                    resultIcon.innerHTML = `<i class="fa-solid fa-shield-check text-success"></i>`;
-                    resultStatus.innerText = "Transaction Safe";
-                    resultStatus.className = "fw-bold mb-2 text-success";
-                    resultText.innerText = "The AI model has processed the details and found no signs of fraudulent activity.";
-                } else if (data.status === 'danger') {
-                    // Fraud Detected
-                    resultIcon.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-danger"></i>`;
-                    resultStatus.innerText = "Fraud Alert!";
-                    resultStatus.className = "fw-bold mb-2 text-danger";
-                    resultText.innerText = "WARNING: The model identified patterns strongly associated with known fraudulent transactions.";
-                } else {
-                     // Error Case
-                     resultIcon.innerHTML = `<i class="fa-solid fa-circle-question text-warning"></i>`;
-                     resultStatus.innerText = "Error";
-                     resultText.innerText = data.prediction_text || "An unexpected error occurred during analysis.";
-                }
-            } catch (error) {
-                resultDisplaySection.style.display = "block";
-                resultIcon.innerHTML = `<i class="fa-solid fa-plug-circle-xmark text-muted"></i>`;
-                resultStatus.innerText = "Connection Failed";
-                resultText.innerText = "Could not connect to the backend server. Make sure Flask is running.";
-            } finally {
-                // Reset Button State
-                btnText.innerHTML = `<i class="fa-solid fa-magnifying-glass me-2"></i>Start AI Analysis`;
-                btnSpinner.style.display = "none";
-                submitBtn.disabled = false;
-            }
+            // Dynamically append to table
+            const tbody = document.getElementById('txTableBody');
+            const newRow = `<tr>
+                <td>#TX-${Math.floor(1000 + Math.random() * 9000)}</td>
+                <td>$${formData.get('Transaction_Amount')}</td>
+                <td>${formData.get('Distance_From_Home')} km</td>
+                <td>${formData.get('Daily_Limit_Used')}%</td>
+                <td><span class="badge ${data.status === 'success' ? 'bg-success' : 'bg-danger'}">${data.status === 'success' ? 'Safe' : 'Fraud Alert'}</span></td>
+            </tr>`;
+            tbody.innerHTML = newRow + tbody.innerHTML;
         });
-    </script>
 
+        // Filter Table
+        function filterTable() {
+            const input = document.getElementById("tableSearch").value.toUpperCase();
+            const rows = document.getElementById("txTableBody").getElementsByTagName("tr");
+            for (let i = 0; i < rows.length; i++) {
+                rows[i].style.display = rows[i].innerText.toUpperCase().includes(input) ? "" : "none";
+            }
+        }
+
+        // Theme Toggle
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('dashThemeIcon');
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                icon.className = 'fa-solid fa-moon';
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                icon.className = 'fa-solid fa-sun';
+            }
+        }
+
+        // Language Switcher
+        let dLang = 'en';
+        function toggleDashboardLang() {
+            dLang = dLang === 'en' ? 'bn' : 'en';
+            document.getElementById('dashLang').innerText = dLang === 'en' ? 'BN' : 'EN';
+            document.querySelectorAll('[data-en]').forEach(el => {
+                el.innerText = el.getAttribute(`data-${dLang}`);
+            });
+        }
+    </script>
 </body>
 </html>
