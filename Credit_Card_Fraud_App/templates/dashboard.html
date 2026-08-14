@@ -1,38 +1,32 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Risk Engine Dashboard - FraudGuard AI</title>
+
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         :root {
-            --bg-color: #f8fafc;
+            --bg-color: #f4f7fe;
             --card-bg: #ffffff;
-            --text-color: #0f172a;
-            --sub-text: #64748b;
-            --border-color: #e2e8f0;
-            --table-hover: #f1f5f9;
+            --text-color: #2b3674;
+            --text-muted: #a310c1;
+            --border-color: #e9ecef;
         }
 
         [data-theme="dark"] {
-            --bg-color: #0b1329;
-            --card-bg: #131f37;
-            --text-color: #f8fafc;
-            --sub-text: #94a3b8 !important; /* Bright high-contrast text for metrics */
-            --border-color: #1e293b;
-            --table-hover: #1e293b;
-        }
-
-        /* WCAG AAA Accessible Text Highlight */
-        ::-selection {
-            background-color: #fde047 !important;
-            color: #0f172a !important;
+            --bg-color: #0b1437;
+            --card-bg: #111c44;
+            --text-color: #ffffff;
+            --text-muted: #a3edd9;
+            --border-color: #2b3674;
         }
 
         body {
@@ -42,245 +36,300 @@
             transition: all 0.3s ease;
         }
 
-        .dashboard-card {
+        .navbar {
             background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .stat-card, .dashboard-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0px 18px 40px rgba(112, 144, 176, 0.07);
+            padding: 20px;
+            margin-bottom: 20px;
         }
 
-        .metric-card {
-            padding: 18px;
-            border-radius: 12px;
-            background: var(--card-bg);
+        .form-control {
+            background-color: var(--bg-color);
             border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 10px;
         }
 
-        .sub-label {
-            color: var(--sub-text) !important;
-            font-weight: 500;
+        .form-control:focus {
+            background-color: var(--bg-color);
+            color: var(--text-color);
         }
 
-        /* Dark Mode Compatible Table */
-        .custom-table {
-            color: var(--text-color) !important;
-            background-color: var(--card-bg) !important;
+        .btn-primary {
+            background-color: #0d6efd;
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
+            font-weight: 600;
         }
-        .custom-table th, .custom-table td {
-            background-color: var(--card-bg) !important;
-            color: var(--text-color) !important;
-            border-color: var(--border-color) !important;
+
+        .chart-container {
+            position: relative;
+            height: 260px;
+            width: 100%;
+        }
+
+        .badge-fraud {
+            background-color: #dc3545;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+        }
+
+        .badge-safe {
+            background-color: #198754;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
         }
     </style>
 </head>
-<body class="p-3 p-md-4">
+<body>
 
-    <!-- Top Navigation -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <a href="/" class="text-decoration-none fw-bold fs-4 text-primary d-flex align-items-center gap-2">
-            <i class="fa-solid fa-shield-halved"></i> FraudGuard AI
-        </a>
-        <div class="d-flex gap-2">
-            <button class="btn btn-outline-secondary btn-sm" onclick="toggleDashboardLang()">
-                <i class="fa-solid fa-globe me-1"></i> <span id="dashLang">BN</span>
-            </button>
-            <button class="btn btn-outline-secondary btn-sm" onclick="toggleTheme()">
-                <i class="fa-solid fa-moon" id="dashThemeIcon"></i>
-            </button>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar navbar-expand-lg px-4 py-3 mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold text-primary fs-4" href="/">
+                <i class="fa-solid fa-shield-halved me-2"></i>FraudGuard AI
+            </a>
+            
+            <div class="d-flex align-items-center gap-2">
+                <!-- Language Toggle Button -->
+                <button id="lang-toggle-btn" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                    <i class="fa-solid fa-globe me-1"></i><span id="lang-text">EN</span>
+                </button>
+                <!-- Dark Mode Toggle Button -->
+                <button id="theme-toggle-btn" class="btn btn-outline-secondary btn-sm rounded-pill px-2">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+            </div>
         </div>
-    </div>
+    </nav>
 
-    <!-- 📊 Summary Metrics Band (Fixed Contrast) -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="metric-card d-flex align-items-center gap-3">
-                <div class="fs-2 text-primary"><i class="fa-solid fa-list-check"></i></div>
-                <div>
-                    <div class="sub-label small" data-en="Total Scanned" data-bn="মোট স্ক্যান করা হয়েছে">Total Scanned</div>
-                    <div class="fs-4 fw-bold" id="metricTotal">1,420</div>
+    <div class="container-fluid px-4">
+
+        <!-- Top Stat Cards -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="stat-card d-flex align-items-center">
+                    <div class="fs-1 text-primary me-3"><i class="fa-solid fa-list-check"></i></div>
+                    <div>
+                        <small class="text-secondary" data-en="Total Scanned" data-bn="মোট স্ক্যান করা হয়েছে">মোট স্ক্যান করা হয়েছে</small>
+                        <h3 class="fw-bold mb-0">1,420</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card d-flex align-items-center">
+                    <div class="fs-1 text-info me-3"><i class="fa-solid fa-gauge-high"></i></div>
+                    <div>
+                        <small class="text-secondary" data-en="System Latency" data-bn="সিস্টেম লেটেন্সি">সিস্টেম লেটেন্সি</small>
+                        <h3 class="fw-bold mb-0">24ms</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card d-flex align-items-center">
+                    <div class="fs-1 text-success me-3"><i class="fa-solid fa-shield-cat"></i></div>
+                    <div>
+                        <small class="text-secondary" data-en="Risk Level" data-bn="ঝুঁকির মাত্রা">ঝুঁকির মাত্রা</small>
+                        <h3 class="fw-bold text-success mb-0" data-en="Low" data-bn="কম">কম</h3>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="metric-card d-flex align-items-center gap-3">
-                <div class="fs-2 text-info"><i class="fa-solid fa-gauge-high"></i></div>
-                <div>
-                    <div class="sub-label small" data-en="System Latency" data-bn="সিস্টেম লেটেন্সি">System Latency</div>
-                    <div class="fs-4 fw-bold">24ms</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="metric-card d-flex align-items-center gap-3">
-                <div class="fs-2 text-success"><i class="fa-solid fa-shield-check"></i></div>
-                <div>
-                    <div class="sub-label small" data-en="Threat Level" data-bn="ঝুঁকির মাত্রা">Threat Level</div>
-                    <div class="fs-4 fw-bold text-success" data-en="Low" data-bn="কম">Low</div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Main Content Area Centered Grid -->
-    <div class="row g-4 justify-content-center">
-        <!-- Centered Transaction Input Box -->
-        <div class="col-lg-7">
-            <div class="dashboard-card p-4">
-                <h5 class="fw-bold mb-3" data-en="Enter Transaction Details" data-bn="লেনদেনের বিবরণ লিখুন">Enter Transaction Details</h5>
-                <form id="predictionForm" class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label small fw-bold" data-en="Transaction Amount ($)" data-bn="লেনদেনের পরিমাণ ($)">Transaction Amount ($)</label>
-                        <input type="number" step="any" name="Transaction_Amount" class="form-control" placeholder="e.g. 250.00" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-bold" data-en="Time Since Last Tx (min)" data-bn="শেষ লেনদেনের সময় (মিনিট)">Time Since Last Tx (min)</label>
-                        <input type="number" step="any" name="Time_Since_Last_Tx" class="form-control" placeholder="e.g. 15" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-bold" data-en="Distance From Last Tx (km)" data-bn="শেষ লেনদেন থেকে দূরত্ব (কিমি)">Distance From Last Tx (km)</label>
-                        <input type="number" step="any" name="Distance_From_Last_Tx" class="form-control" placeholder="e.g. 5" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-bold" data-en="Distance From Home (km)" data-bn="বাড়ি থেকে দূরত্ব (কিমি)">Distance From Home (km)</label>
-                        <input type="number" step="any" name="Distance_From_Home" class="form-control" placeholder="e.g. 12" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-bold" data-en="Daily Limit Used (%)" data-bn="দৈনিক সীমা ব্যবহার (%)">Daily Limit Used (%)</label>
-                        <input type="number" step="any" name="Daily_Limit_Used" class="form-control" placeholder="e.g. 45" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small fw-bold" data-en="Card Age (Days)" data-bn="কার্ডের মেয়াদ (দিন)">Card Age (Days)</label>
-                        <input type="number" step="any" name="Card_Age_Days" class="form-control" placeholder="e.g. 365" required>
-                    </div>
-                    <div class="col-12 mt-4">
-                        <button type="submit" class="btn btn-primary w-100 fw-bold py-2" id="submitBtn">
-                            <i class="fa-solid fa-microchip me-1"></i> <span data-en="Analyze Risk" data-bn="ঝুঁকি পরীক্ষা করুন">Analyze Risk</span>
+        <!-- Main Workspace Row -->
+        <div class="row">
+            
+            <!-- Left Side: Transaction Input Form -->
+            <div class="col-lg-7">
+                <div class="dashboard-card">
+                    <h5 class="fw-bold mb-3" data-en="Transaction Details" data-bn="লেনদেনের বিবরণ লিখুন">লেনদেনের বিবরণ লিখুন</h5>
+                    
+                    <form id="risk-form" onsubmit="event.preventDefault(); triggerAnalysis();">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small" data-en="Transaction Amount ($)" data-bn="লেনদেনের পরিমাণ ($)">লেনদেনের পরিমাণ ($)</label>
+                                <input type="number" class="form-control" value="1150">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small" data-en="Time Since Last Tx (min)" data-bn="শেষ লেনদেনের সময় (মিনিট)">শেষ লেনদেনের সময় (মিনিট)</label>
+                                <input type="number" class="form-control" value="1">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small" data-en="Distance From Last Tx (km)" data-bn="শেষ লেনদেন থেকে দূরত্ব (কিমি)">শেষ লেনদেন থেকে দূরত্ব (কিমি)</label>
+                                <input type="number" class="form-control" value="50">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small" data-en="Distance From Home (km)" data-bn="বাড়ি থেকে দূরত্ব (কিমি)">বাড়ি থেকে দূরত্ব (কিমি)</label>
+                                <input type="number" class="form-control" value="40">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small" data-en="Daily Limit Used (%)" data-bn="দৈনিক সীমা ব্যবহার (%)">দৈনিক সীমা ব্যবহার (%)</label>
+                                <input type="number" class="form-control" value="56">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small" data-en="Card Age (days)" data-bn="কার্ডের মেয়াদ (দিন)">কার্ডের মেয়াদ (দিন)</label>
+                                <input type="number" class="form-control" value="36">
+                            </div>
+                        </div>
+
+                        <!-- Analyze Risk Button -->
+                        <button type="submit" id="analyze-btn" class="btn btn-primary w-100 mt-4" data-en="Analyze Risk" data-bn="ঝুঁকি বিশ্লেষণ করুন">
+                            <i class="fa-solid fa-microchip me-2"></i><span id="btn-text" data-en="Analyze Risk" data-bn="ঝুঁকি বিশ্লেষণ করুন">ঝুঁকি বিশ্লেষণ করুন</span>
                         </button>
-                    </div>
-                </form>
+                    </form>
 
-                <div id="resultBox" class="alert mt-3 d-none text-center fw-bold"></div>
+                    <!-- Alert Output Box -->
+                    <div id="result-alert" class="alert alert-danger mt-3 text-center fw-bold" style="display: block;" data-en="Fraud Alert Detected!" data-bn="জালিয়াতি সংকেত চিহ্নিত হয়েছে!">
+                        জালিয়াতি সংকেত চিহ্নিত হয়েছে!
+                    </div>
+                </div>
             </div>
+
+            <!-- Right Side: Chart Visualizer -->
+            <div class="col-lg-5">
+                <div class="dashboard-card text-center">
+                    <h5 class="fw-bold mb-3" data-en="Risk Analysis Graph" data-bn="ঝুঁকি বিশ্লেষণের গ্রাফ">ঝুঁকি বিশ্লেষণের গ্রাফ</h5>
+                    <div class="chart-container d-flex justify-content-center align-items-center">
+                        <canvas id="riskPieChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
-        <!-- Risk Distribution Visual Chart -->
-        <div class="col-lg-5">
-            <div class="dashboard-card p-4 h-100 d-flex flex-column justify-content-center align-items-center">
-                <h6 class="fw-bold mb-3" data-en="Risk Analysis Breakdown" data-bn="ঝুঁকি বিশ্লেষণের গ্রাফ">Risk Analysis Breakdown</h6>
-                <div style="width: 240px; height: 240px;">
-                    <canvas id="riskChart"></canvas>
+        <!-- Recent Transactions Section -->
+        <div class="row">
+            <div class="col-12">
+                <div class="dashboard-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0" data-en="Recent Transaction History" data-bn="সাম্প্রতিক লেনদেনের ইতিহাস">সাম্প্রতিক লেনদেনের ইতিহাস</h5>
+                        <input type="text" class="form-control form-control-sm w-25" placeholder="Search..." data-en-placeholder="Search..." data-bn-placeholder="সন্ধান করুন...">
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th data-en="Amount" data-bn="পরিমাণ">পরিমাণ</th>
+                                    <th data-en="Distance" data-bn="দূরত্ব">দূরত্ব</th>
+                                    <th data-en="Daily Limit" data-bn="দৈনিক সীমা">দৈনিক সীমা</th>
+                                    <th data-en="Status" data-bn="স্ট্যাটাস">স্ট্যাটাস</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>#TX-3274</td>
+                                    <td>$1150</td>
+                                    <td>40 km</td>
+                                    <td>56%</td>
+                                    <td><span class="badge-fraud" data-en="Fraud Alert" data-bn="জালিয়াতি সংকেত">জালিয়াতি সংকেত</span></td>
+                                </tr>
+                                <tr>
+                                    <td>#TX-9021</td>
+                                    <td>$120.00</td>
+                                    <td>4.2 km</td>
+                                    <td>22%</td>
+                                    <td><span class="badge-safe" data-en="Safe" data-bn="নিরাপদ">নিরাপদ</span></td>
+                                </tr>
+                                <tr>
+                                    <td>#TX-9022</td>
+                                    <td>$1,550.00</td>
+                                    <td>210 km</td>
+                                    <td>88%</td>
+                                    <td><span class="badge-fraud" data-en="Fraud Alert" data-bn="জালিয়াতি সংকেত">জালিয়াতি সংকেত</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
+
     </div>
 
-    <!-- 📜 Recent Transactions Table (Fixed Dark Mode Style) -->
-    <div class="dashboard-card p-4 mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="fw-bold m-0" data-en="Recent Transactions History" data-bn="সাম্প্রতিক লেনদেনের ইতিহাস">Recent Transactions History</h5>
-            <input type="text" id="tableSearch" class="form-control form-control-sm w-auto" placeholder="Search..." onkeyup="filterTable()">
-        </div>
-        <div class="table-responsive">
-            <table class="table custom-table align-middle m-0" id="txTable">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th data-en="Amount" data-bn="পরিমাণ">Amount</th>
-                        <th data-en="Dist from Home" data-bn="দূরত্ব">Dist from Home</th>
-                        <th data-en="Daily Limit" data-bn="দৈনিক সীমা">Daily Limit</th>
-                        <th data-en="Status" data-bn="স্ট্যাটাস">Status</th>
-                    </tr>
-                </thead>
-                <tbody id="txTableBody">
-                    <tr>
-                        <td>#TX-9021</td>
-                        <td>$120.00</td>
-                        <td>4.2 km</td>
-                        <td>22%</td>
-                        <td><span class="badge bg-success" data-en="Safe" data-bn="নিরাপদ">Safe</span></td>
-                    </tr>
-                    <tr>
-                        <td>#TX-9022</td>
-                        <td>$1,550.00</td>
-                        <td>210 km</td>
-                        <td>88%</td>
-                        <td><span class="badge bg-danger" data-en="Fraud Alert" data-bn="জালিয়াতি সংকেত">Fraud Alert</span></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
+    <!-- JavaScript for Dynamic Logic -->
     <script>
-        const ctx = document.getElementById('riskChart').getContext('2d');
-        const riskChart = new Chart(ctx, {
+        let currentLang = 'bn'; // Default language
+
+        // Initialize Chart.js
+        const ctx = document.getElementById('riskPieChart').getContext('2d');
+        let riskPieChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Safe Transactions', 'Fraud Flagged'],
+                labels: ['নিরাপদ লেনদেন', 'জালিয়াতি সংকেত'], // Default Bengali Labels
                 datasets: [{
-                    data: [1380, 40],
-                    backgroundColor: ['#22c55e', '#ef4444']
+                    data: [96.5, 3.5],
+                    backgroundColor: ['#20c997', '#dc3545'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            font: { size: 12, family: "'Segoe UI', sans-serif" }
+                        }
+                    }
+                },
+                cutout: '70%'
+            }
         });
 
-        document.getElementById('predictionForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            const resBox = document.getElementById('resultBox');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Processing...';
-
-            const formData = new FormData(this);
-            const response = await fetch('/predict', { method: 'POST', body: formData });
-            const data = await response.json();
-
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-microchip me-1"></i> Analyze Risk';
-
-            resBox.classList.remove('d-none', 'alert-success', 'alert-danger');
-            resBox.classList.add(data.status === 'success' ? 'alert-success' : 'alert-danger');
-            resBox.innerText = data.prediction_text;
-
-            const tbody = document.getElementById('txTableBody');
-            const newRow = `<tr>
-                <td>#TX-${Math.floor(1000 + Math.random() * 9000)}</td>
-                <td>$${formData.get('Transaction_Amount')}</td>
-                <td>${formData.get('Distance_From_Home')} km</td>
-                <td>${formData.get('Daily_Limit_Used')}%</td>
-                <td><span class="badge ${data.status === 'success' ? 'bg-success' : 'bg-danger'}">${data.status === 'success' ? 'Safe' : 'Fraud Alert'}</span></td>
-            </tr>`;
-            tbody.innerHTML = newRow + tbody.innerHTML;
-        });
-
-        function filterTable() {
-            const input = document.getElementById("tableSearch").value.toUpperCase();
-            const rows = document.getElementById("txTableBody").getElementsByTagName("tr");
-            for (let i = 0; i < rows.length; i++) {
-                rows[i].style.display = rows[i].innerText.toUpperCase().includes(input) ? "" : "none";
-            }
-        }
-
-        function toggleTheme() {
-            const body = document.body;
-            const icon = document.getElementById('dashThemeIcon');
-            if (body.getAttribute('data-theme') === 'dark') {
-                body.removeAttribute('data-theme');
-                icon.className = 'fa-solid fa-moon';
-            } else {
-                body.setAttribute('data-theme', 'dark');
-                icon.className = 'fa-solid fa-sun';
-            }
-        }
-
-        let dLang = 'en';
-        function toggleDashboardLang() {
-            dLang = dLang === 'en' ? 'bn' : 'en';
-            document.getElementById('dashLang').innerText = dLang === 'en' ? 'BN' : 'EN';
-            document.querySelectorAll('[data-en]').forEach(el => {
-                el.innerText = el.getAttribute(`data-${dLang}`);
+        // Toggle Language Function
+        document.getElementById('lang-toggle-btn').addEventListener('click', function() {
+            currentLang = currentLang === 'bn' ? 'en' : 'bn';
+            document.getElementById('lang-text').innerText = currentLang === 'bn' ? 'EN' : 'BN';
+            
+            // Translate Text Content
+            document.querySelectorAll('[data-en][data-bn]').forEach(el => {
+                el.innerText = el.getAttribute(`data-${currentLang}`);
             });
+
+            // Translate Placeholders
+            document.querySelectorAll('[data-en-placeholder][data-bn-placeholder]').forEach(el => {
+                el.placeholder = el.getAttribute(`data-${currentLang}-placeholder`);
+            });
+
+            // Update Chart.js Labels Dynamic Translation
+            if (currentLang === 'bn') {
+                riskPieChart.data.labels = ['নিরাপদ লেনদেন', 'জালিয়াতি সংকেত'];
+            } else {
+                riskPieChart.data.labels = ['Safe Transactions', 'Fraud Flagged'];
+            }
+            riskPieChart.update();
+        });
+
+        // Dark Mode Toggle Logic
+        document.getElementById('theme-toggle-btn').addEventListener('click', function() {
+            const currentTheme = document.body.getAttribute('data-theme');
+            if (currentTheme === 'dark') {
+                document.body.removeAttribute('data-theme');
+                this.innerHTML = '<i class="fa-solid fa-moon"></i>';
+            } else {
+                document.body.setAttribute('data-theme', 'dark');
+                this.innerHTML = '<i class="fa-solid fa-sun"></i>';
+            }
+        });
+
+        // Dummy Analysis Click Simulation
+        function triggerAnalysis() {
+            const resultBox = document.getElementById('result-alert');
+            resultBox.style.display = 'block';
         }
     </script>
 </body>
