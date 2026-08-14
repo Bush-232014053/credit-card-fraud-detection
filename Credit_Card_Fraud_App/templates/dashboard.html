@@ -17,7 +17,6 @@
             --bg-color: #f4f7fe;
             --card-bg: #ffffff;
             --text-color: #2b3674;
-            --text-muted: #a310c1;
             --border-color: #e9ecef;
         }
 
@@ -25,7 +24,6 @@
             --bg-color: #0b1437;
             --card-bg: #111c44;
             --text-color: #ffffff;
-            --text-muted: #a3edd9;
             --border-color: #2b3674;
         }
 
@@ -81,6 +79,7 @@
             color: white;
             padding: 6px 12px;
             border-radius: 20px;
+            font-weight: 500;
         }
 
         .badge-safe {
@@ -88,6 +87,7 @@
             color: white;
             padding: 6px 12px;
             border-radius: 20px;
+            font-weight: 500;
         }
     </style>
 </head>
@@ -101,9 +101,9 @@
             </a>
             
             <div class="d-flex align-items-center gap-2">
-                <!-- Language Toggle Button -->
+                <!-- Language Toggle Button (Shows Active Language BN initially) -->
                 <button id="lang-toggle-btn" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-                    <i class="fa-solid fa-globe me-1"></i><span id="lang-text">EN</span>
+                    <i class="fa-solid fa-globe me-1"></i><span id="lang-text">BN</span>
                 </button>
                 <!-- Dark Mode Toggle Button -->
                 <button id="theme-toggle-btn" class="btn btn-outline-secondary btn-sm rounded-pill px-2">
@@ -183,7 +183,7 @@
                         </div>
 
                         <!-- Analyze Risk Button -->
-                        <button type="submit" id="analyze-btn" class="btn btn-primary w-100 mt-4" data-en="Analyze Risk" data-bn="ঝুঁকি বিশ্লেষণ করুন">
+                        <button type="submit" id="analyze-btn" class="btn btn-primary w-100 mt-4">
                             <i class="fa-solid fa-microchip me-2"></i><span id="btn-text" data-en="Analyze Risk" data-bn="ঝুঁকি বিশ্লেষণ করুন">ঝুঁকি বিশ্লেষণ করুন</span>
                         </button>
                     </form>
@@ -213,7 +213,7 @@
                 <div class="dashboard-card">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="fw-bold mb-0" data-en="Recent Transaction History" data-bn="সাম্প্রতিক লেনদেনের ইতিহাস">সাম্প্রতিক লেনদেনের ইতিহাস</h5>
-                        <input type="text" class="form-control form-control-sm w-25" placeholder="Search..." data-en-placeholder="Search..." data-bn-placeholder="সন্ধান করুন...">
+                        <input type="text" class="form-control form-control-sm w-25" placeholder="সন্ধান করুন..." data-en-placeholder="Search..." data-bn-placeholder="সন্ধান করুন...">
                     </div>
 
                     <div class="table-responsive">
@@ -260,14 +260,14 @@
 
     <!-- JavaScript for Dynamic Logic -->
     <script>
-        let currentLang = 'bn'; // Default language
+        let currentLang = 'bn'; // Default active language is Bengali
 
         // Initialize Chart.js
         const ctx = document.getElementById('riskPieChart').getContext('2d');
         let riskPieChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['নিরাপদ লেনদেন', 'জালিয়াতি সংকেত'], // Default Bengali Labels
+                labels: ['নিরাপদ লেনদেন', 'জালিয়াতি সংকেত'], // Initial Bengali Labels
                 datasets: [{
                     data: [96.5, 3.5],
                     backgroundColor: ['#20c997', '#dc3545'],
@@ -290,22 +290,25 @@
             }
         });
 
-        // Toggle Language Function
+        // Fixed Toggle Language Function
         document.getElementById('lang-toggle-btn').addEventListener('click', function() {
+            // Switch current active language state
             currentLang = currentLang === 'bn' ? 'en' : 'bn';
-            document.getElementById('lang-text').innerText = currentLang === 'bn' ? 'EN' : 'BN';
             
-            // Translate Text Content
+            // Button label displays current active language
+            document.getElementById('lang-text').innerText = currentLang === 'bn' ? 'BN' : 'EN';
+            
+            // Translate All Text Elements
             document.querySelectorAll('[data-en][data-bn]').forEach(el => {
                 el.innerText = el.getAttribute(`data-${currentLang}`);
             });
 
-            // Translate Placeholders
+            // Translate All Search Input Placeholders
             document.querySelectorAll('[data-en-placeholder][data-bn-placeholder]').forEach(el => {
                 el.placeholder = el.getAttribute(`data-${currentLang}-placeholder`);
             });
 
-            // Update Chart.js Labels Dynamic Translation
+            // Update Chart.js Labels Correctly
             if (currentLang === 'bn') {
                 riskPieChart.data.labels = ['নিরাপদ লেনদেন', 'জালিয়াতি সংকেত'];
             } else {
@@ -314,7 +317,7 @@
             riskPieChart.update();
         });
 
-        // Dark Mode Toggle Logic
+        // Dark Mode Toggle Function
         document.getElementById('theme-toggle-btn').addEventListener('click', function() {
             const currentTheme = document.body.getAttribute('data-theme');
             if (currentTheme === 'dark') {
@@ -326,7 +329,7 @@
             }
         });
 
-        // Dummy Analysis Click Simulation
+        // Trigger Analysis Simulation
         function triggerAnalysis() {
             const resultBox = document.getElementById('result-alert');
             resultBox.style.display = 'block';
