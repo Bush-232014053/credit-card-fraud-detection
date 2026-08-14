@@ -1,10 +1,43 @@
-from flask import Flask, render_template, request, jsonify
-# import joblib  # Uncomment this line if you are using a trained .pkl / .joblib ML model
+import re
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
+app.secret_key = 'super_secret_fraudguard_key'  # Required for session management & flash alerts
 
-# Load your Machine Learning model here if available:
-# model = joblib.load('model.pkl')
+# -------------------------------------------------------------
+# Dummy User Database (Default Username/Email & Password)
+# Default Login: "abc" or "abc@company.com"
+# Default Password adhering to security rules: "Abc@123"
+# -------------------------------------------------------------
+users_db = {
+    "abc@company.com": generate_password_hash("Abc@123"),
+    "abc": generate_password_hash("Abc@123")  # Allows login using 'abc' username
+}
+
+
+# -------------------------------------------------------------
+# Password Validation Function
+# Policy Rules: Min 6 chars, >=1 Uppercase, >=1 Lowercase, >=1 Special Symbol
+# -------------------------------------------------------------
+def is_valid_password(password):
+    # 1. Minimum 6 characters long
+    if len(password) < 6:
+        return False, "Password must be at least 6 characters long!"
+    
+    # 2. At least one uppercase letter (A-Z)
+    if not re.search(r'[A-Z]', password):
+        return False, "Password must contain at least one uppercase letter (A-Z)!"
+    
+    # 3. At least one lowercase letter (a-z)
+    if not re.search(r'[a-z]', password):
+        return False, "Password must contain at least one lowercase letter (a-z)!"
+    
+    # 4. At least one special symbol (!@#$%^&* etc.)
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+        return False, "Password must contain at least one special character (!@#$%^&*)!"
+    
+    return True, "Valid Password"
 
 
 # 1. Landing / Home Page Route
@@ -16,26 +49,73 @@ def home():
 # 2. Main Dashboard Route
 @app.route('/dashboard')
 def dashboard():
+    # Redirect unauthenticated users to login page
+    if 'user' not in session:
+        flash('Please login first to access the dashboard.', 'warning')
+        return redirect(url_for('login'))
     return render_template('dashboard.html')
 
 
-# 3. Login Page Route
-@app.route('/login')
+# 3. Login Page Route (GET & POST)
+@app.route('/login', methods=['GET', 'POST'])
 def login():
+    if request.method == 'POST':
+        email_or_user = request.form.get('email', '').strip()
+        password = request.form.get('password', '').strip()
+
+        # Retrieve stored password hash for the given user
+        stored_hash = users_db.get(email_or_user)
+
+        # Validate username and hashed password
+        if stored_hash and check_password_hash(stored_hash, password):
+            session['user'] = email_or_user
+            flash('Successfully logged in!', 'success')
+            return redirect(url_for('dashboard'))
+        else:
+            flash('Invalid email/username or password!', 'danger')
+            return redirect(url_for('login'))
+
     return render_template('login.html')
 
 
-# 4. Register Page Route
-@app.route('/register')
+# 4. Register Page Route (GET & POST with Strong Password Enforcement)
+@app.route('/register', methods=['GET', 'POST'])
 def register():
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip()
+        password = request.form.get('password', '').strip()
+
+        # Check if email is already registered
+        if email in users_db:
+            flash('This email is already registered!', 'warning')
+            return redirect(url_for('register'))
+
+        # Validate password strength against policy
+        is_valid, msg = is_valid_password(password)
+        if not is_valid:
+            flash(msg, 'danger')
+            return redirect(url_for('register'))
+
+        # Save user with hashed password
+        users_db[email] = generate_password_hash(password)
+        flash('Registration successful! Please sign in.', 'success')
+        return redirect(url_for('login'))
+
     return render_template('register.html')
 
 
-# 5. AI Prediction Endpoint (Handles form submission from dashboard.html via AJAX)
+# 5. Logout Route
+@app.route('/logout')
+def logout():
+    session.pop('user', None)
+    flash('You have been logged out successfully.', 'info')
+    return redirect(url_for('login'))
+
+
+# 6. AI Prediction Endpoint (Handles form submission from dashboard.html via AJAX)
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # Extract all 6 input features from dashboard.html form submission
         amount = float(request.form.get('Transaction_Amount', 0))
         time_since_last_tx = float(request.form.get('Time_Since_Last_Tx', 0))
         distance_from_last_tx = float(request.form.get('Distance_From_Last_Tx', 0))
@@ -43,13 +123,7 @@ def predict():
         daily_limit_used = float(request.form.get('Daily_Limit_Used', 0))
         card_age_days = float(request.form.get('Card_Age_Days', 0))
 
-        # --- Option A: Prediction using a pre-trained ML Model ---
-        # features = [[amount, time_since_last_tx, distance_from_last_tx, distance_from_home, daily_limit_used, card_age_days]]
-        # prediction = model.predict(features)[0] # 1 = Fraud, 0 = Safe
-        # is_fraud = (prediction == 1)
-
-        # --- Option B: Demonstration Rule-Based Logic ---
-        # Flags transaction as fraud if amount > $1000, daily limit > 80%, or distance from home > 200 km
+        # Demonstration Rule-Based Logic
         is_fraud = (amount > 1000) or (daily_limit_used > 80) or (distance_from_home > 200)
 
         if is_fraud:
@@ -72,3 +146,4 @@ def predict():
 
 if __name__ == '__main__':
     app.run(debug=True)
+    
