@@ -1,152 +1,149 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - FraudGuard AI</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome Icons -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            background-color: #0f172a;
+            color: #f8fafc;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #f8fafc;
         }
-        .register-card {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+
+        /* Accessible Highlight */
+        ::-selection {
+            background-color: #fde047 !important;
+            color: #0f172a !important;
+        }
+
+        .auth-card {
+            background: #ffffff;
+            color: #0f172a;
             border-radius: 16px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-            padding: 2.5rem;
+            padding: 35px;
             width: 100%;
-            max-width: 440px;
+            max-width: 420px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
-        .brand-logo {
-            font-size: 2.5rem;
-            color: #38bdf8;
-        }
-        .form-control {
-            background-color: rgba(15, 23, 42, 0.6);
-            border: 1px solid #334155;
-            color: #f8fafc;
-            border-radius: 8px;
-            padding: 0.75rem 1rem;
-        }
-        .form-control:focus {
-            background-color: rgba(15, 23, 42, 0.8);
-            border-color: #38bdf8;
-            color: #ffffff;
-            box-shadow: 0 0 0 0.25rem rgba(56, 189, 248, 0.25);
-        }
-        .form-control::placeholder {
-            color: #94a3b8;
-        }
-        .btn-primary {
-            background: linear-gradient(90deg, #0284c7 0%, #2563eb 100%);
-            border: none;
-            border-radius: 8px;
-            padding: 0.75rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        .btn-primary:hover {
-            background: linear-gradient(90deg, #0369a1 0%, #1d4ed8 100%);
-            transform: translateY(-1px);
-        }
-        .password-rules {
+
+        .rule-item {
             font-size: 0.8rem;
-            color: #94a3b8;
-            background: rgba(15, 23, 42, 0.5);
-            padding: 10px;
-            border-radius: 6px;
-            border-left: 3px solid #38bdf8;
+            color: #64748b;
         }
-        .login-link {
-            color: #38bdf8;
-            text-decoration: none;
-        }
-        .login-link:hover {
-            text-decoration: underline;
+        .rule-item.valid {
+            color: #16a34a;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
-<div class="register-card">
-    <!-- Logo & Title -->
-    <div class="text-center mb-4">
-        <div class="brand-logo mb-2">
-            <i class="fa-solid fa-shield-halved"></i>
+    <div class="auth-card">
+        <div class="text-center mb-4">
+            <h4 class="fw-bold text-primary"><i class="fa-solid fa-shield-halved"></i> FraudGuard</h4>
+            <p class="text-muted small">Create your enterprise account</p>
         </div>
-        <h3 class="fw-bold text-white">Create Account</h3>
-        <p class="text-muted small">Join FraudGuard AI Detection Network</p>
+
+        <!-- Flash Alert Message Box (Renders messages from Flask backend) -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show small py-2 px-3 mb-3" role="alert">
+                <i class="fa-solid fa-triangle-exclamation me-1"></i> {{ message }}
+                <button type="button" class="btn-close py-2" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <!-- Added action="/register" and method="POST" -->
+        <form action="/register" method="POST" id="registerForm">
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Full Name</label>
+                <!-- Added name="fullname" -->
+                <input type="text" name="fullname" class="form-control" placeholder="ABC User" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Work Email</label>
+                <!-- Added name="email" and updated placeholder to abc@company.com -->
+                <input type="email" name="email" class="form-control" placeholder="abc@company.com" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Password</label>
+                <div class="input-group">
+                    <!-- Added name="password" -->
+                    <input type="password" id="passwordInput" name="password" class="form-control" placeholder="••••••••" required onkeyup="validatePassword()">
+                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility()">
+                        <i class="fa-solid fa-eye" id="eyeIcon"></i>
+                    </button>
+                </div>
+                
+                <!-- Password Rule Validation Indicator -->
+                <div class="mt-2 p-2 bg-light rounded">
+                    <div class="rule-item" id="ruleLength"><i class="fa-solid fa-circle-xmark me-1"></i> At least 6 characters</div>
+                    <div class="rule-item" id="ruleUpperLower"><i class="fa-solid fa-circle-xmark me-1"></i> Uppercase & Lowercase letters</div>
+                    <div class="rule-item" id="ruleSpecial"><i class="fa-solid fa-circle-xmark me-1"></i> At least 1 special symbol (@$!%*?&)</div>
+                </div>
+            </div>
+
+            <button type="submit" id="regBtn" class="btn btn-primary w-100 fw-bold py-2 mt-2" disabled>Create Account</button>
+        </form>
+
+        <div class="text-center mt-3">
+            <span class="small text-muted">Already have an account? <a href="/login" class="text-primary text-decoration-none fw-bold">Sign In</a></span>
+        </div>
     </div>
 
-    <!-- Flask Flash Messages (Error/Success Alerts) -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }} alert-dismissible fade show text-start py-2 px-3 small mb-3" role="alert">
-             <i class="fa-solid fa-triangle-exclamation me-1"></i> {{ message }}
-             <button type="button" class="btn-close btn-close-white py-2" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
+    <!-- Bootstrap JS (Required for dismissible alerts) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Registration Form -->
-    <form action="{{ url_for('register') }}" method="POST">
-        
-        <!-- Email Input -->
-        <div class="mb-3">
-            <label for="email" class="form-label text-light small fw-semibold">Email or Username</label>
-            <div class="input-group">
-                <span class="input-group-text bg-dark text-secondary border-secondary"><i class="fa-solid fa-envelope"></i></span>
-                <input type="text" class="form-control" id="email" name="email" placeholder="name@company.com" required autocomplete="off">
-            </div>
-        </div>
+    <script>
+        function togglePasswordVisibility() {
+            const pwd = document.getElementById('passwordInput');
+            const icon = document.getElementById('eyeIcon');
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                icon.className = 'fa-solid fa-eye-slash';
+            } else {
+                pwd.type = 'password';
+                icon.className = 'fa-solid fa-eye';
+            }
+        }
 
-        <!-- Password Input -->
-        <div class="mb-3">
-            <label for="password" class="form-label text-light small fw-semibold">Password</label>
-            <div class="input-group">
-                <span class="input-group-text bg-dark text-secondary border-secondary"><i class="fa-solid fa-lock"></i></span>
-                <input type="password" class="form-control" id="password" name="password" placeholder="••••••••" required>
-            </div>
-        </div>
+        function validatePassword() {
+            const val = document.getElementById('passwordInput').value;
+            const lenValid = val.length >= 6;
+            const upperLowerValid = /[a-z]/.test(val) && /[A-Z]/.test(val);
+            const specialValid = /[!@#$%^&*(),.?":{}|<>]/.test(val);
 
-        <!-- Password Requirements Info Box -->
-        <div class="password-rules mb-4">
-            <div class="fw-semibold mb-1 text-light">Password Policy:</div>
-            <ul class="mb-0 ps-3">
-                <li>Minimum 6 characters</li>
-                <li>At least 1 Uppercase (A-Z) & 1 Lowercase (a-z)</li>
-                <li>At least 1 Special Symbol (!@#$%^&*)</li>
-            </ul>
-        </div>
+            updateRule('ruleLength', lenValid);
+            updateRule('ruleUpperLower', upperLowerValid);
+            updateRule('ruleSpecial', specialValid);
 
-        <!-- Submit Button -->
-        <button type="submit" class="btn btn-primary w-100 mb-3">
-            <i class="fa-solid fa-user-plus me-1"></i> Register Account
-        </button>
+            document.getElementById('regBtn').disabled = !(lenValid && upperLowerValid && specialValid);
+        }
 
-    </form>
-
-    <!-- Navigation to Login -->
-    <div class="text-center mt-3 small text-secondary">
-        Already have an account? 
-        <a href="{{ url_for('login') }}" class="login-link fw-semibold">Sign In</a>
-    </div>
-</div>
-
-<!-- Bootstrap 5 JS Bundle -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        function updateRule(elementId, isValid) {
+            const el = document.getElementById(elementId);
+            if (isValid) {
+                el.className = 'rule-item valid';
+                el.innerHTML = `<i class="fa-solid fa-circle-check me-1"></i> ${el.innerText.replace(/^.*?\s/, '')}`;
+            } else {
+                el.className = 'rule-item';
+                el.innerHTML = `<i class="fa-solid fa-circle-xmark me-1"></i> ${el.innerText.replace(/^.*?\s/, '')}`;
+            }
+        }
+    </script>
 </body>
 </html>
