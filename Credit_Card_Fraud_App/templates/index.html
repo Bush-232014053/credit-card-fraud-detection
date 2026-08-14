@@ -18,23 +18,21 @@
             --bg-light: #f8fafc;
             --card-border: #e2e8f0;
             --text-dark: #0f172a;
-            --text-muted: #64748b;
+            --text-muted: #475569;
+            --card-bg: #ffffff;
         }
 
         [data-theme="dark"] {
             --dark-navy: #020617;
-            --bg-light: #0f172a;
+            --bg-light: #0b1329;
             --card-border: #1e293b;
             --text-dark: #f8fafc;
-            --text-muted: #94a3b8;
+            --text-muted: #cbd5e1 !important; /* High contrast bright text for dark mode */
+            --card-bg: #131f37;
         }
 
         /* WCAG AAA Accessible Text Selection */
         ::-selection {
-            background-color: #fde047 !important;
-            color: #0f172a !important;
-        }
-        ::-moz-selection {
             background-color: #fde047 !important;
             color: #0f172a !important;
         }
@@ -46,7 +44,6 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        /* Hero Section Styling */
         .hero-section {
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             color: #ffffff;
@@ -73,13 +70,13 @@
 
         .hero-subtitle {
             font-size: 1.2rem;
-            color: #94a3b8;
+            color: #cbd5e1;
             max-width: 650px;
             margin: 20px auto 35px auto;
         }
 
         .feature-card {
-            background: #ffffff;
+            background: var(--card-bg);
             border: 1px solid var(--card-border);
             border-radius: 16px;
             padding: 30px;
@@ -87,21 +84,21 @@
             transition: all 0.3s ease;
         }
 
-        [data-theme="dark"] .feature-card {
-            background: #1e293b;
+        .feature-card p {
+            color: var(--text-muted) !important;
         }
 
         .feature-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
         }
 
         .icon-box {
             width: 50px;
             height: 50px;
             border-radius: 12px;
-            background-color: rgba(37, 99, 235, 0.1);
-            color: var(--primary-blue);
+            background-color: rgba(37, 99, 235, 0.15);
+            color: #3b82f6;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -128,12 +125,10 @@
                 <i class="fa-solid fa-shield-halved text-primary"></i> FraudGuard AI
             </a>
             <div class="d-flex align-items-center gap-3">
-                <!-- Language Switcher -->
                 <button class="btn btn-outline-light btn-sm" id="langToggleBtn" onclick="toggleLanguage()">
                     <i class="fa-solid fa-globe me-1"></i> <span id="langText">BN</span>
                 </button>
                 
-                <!-- Dark Mode Switcher -->
                 <button class="theme-toggle-btn" onclick="toggleDarkMode()">
                     <i class="fa-solid fa-moon" id="themeIcon"></i>
                 </button>
@@ -166,28 +161,28 @@
         <div class="container py-4">
             <div class="text-center mb-5">
                 <h2 class="fw-bold" data-en="Designed for High-Volume Business" data-bn="উচ্চমাত্রার লেনদেনের জন্য তৈরি">Designed for High-Volume Business</h2>
-                <p class="text-muted" data-en="Enterprise-grade security tools built into one unified dashboard." data-bn="একটি সমন্বিত ড্যাশবোর্ডে এন্টারপ্রাইজ গ্রেড নিরাপত্তা টুলস।">Enterprise-grade security tools built into one unified dashboard.</p>
+                <p style="color: var(--text-muted);" data-en="Enterprise-grade security tools built into one unified dashboard." data-bn="একটি সমন্বিত ড্যাশবোর্ডে এন্টারপ্রাইজ গ্রেড নিরাপত্তা টুলস।">Enterprise-grade security tools built into one unified dashboard.</p>
             </div>
             <div class="row g-4">
                 <div class="col-md-4">
                     <div class="feature-card">
                         <div class="icon-box"><i class="fa-solid fa-bolt"></i></div>
                         <h4 class="fw-bold fs-5" data-en="18ms Ultra-Fast Latency" data-bn="১৮ মি.সে আল্ট্রা-ফাস্ট রেসপন্স">18ms Ultra-Fast Latency</h4>
-                        <p class="text-muted fs-6" data-en="Analyze transactions in real-time without hurting checkout conversion rates." data-bn="গ্রাহকের পেমেন্ট অভিজ্ঞতায় বাধা না দিয়ে তাৎক্ষণিক ট্রানজ্যাকশন স্ক্যান করুন।">Analyze transactions in real-time without hurting checkout conversion rates.</p>
+                        <p class="fs-6 mb-0" data-en="Analyze transactions in real-time without hurting checkout conversion rates." data-bn="গ্রাহকের পেমেন্ট অভিজ্ঞতায় বাধা না দিয়ে তাৎক্ষণিক ট্রানজ্যাকশন স্ক্যান করুন।">Analyze transactions in real-time without hurting checkout conversion rates.</p>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="feature-card">
                         <div class="icon-box"><i class="fa-solid fa-brain"></i></div>
                         <h4 class="fw-bold fs-5" data-en="Random Forest Model" data-bn="র‍্যান্ডম ফরেস্ট মডেল">Random Forest Model</h4>
-                        <p class="text-muted fs-6" data-en="Self-learning algorithms trained on millions of transaction indicators." data-bn="মিলিয়ন ট্রানজ্যাকশন ডেটায় প্রশিক্ষিত স্বয়ংক্রিয় কৃত্রিম বুদ্ধিমত্তা।">Self-learning algorithms trained on millions of transaction indicators.</p>
+                        <p class="fs-6 mb-0" data-en="Self-learning algorithms trained on millions of transaction indicators." data-bn="মিলিয়ন ট্রানজ্যাকশন ডেটায় প্রশিক্ষিত স্বয়ংক্রিয় কৃত্রিম বুদ্ধিমত্তা।">Self-learning algorithms trained on millions of transaction indicators.</p>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="feature-card">
                         <div class="icon-box"><i class="fa-solid fa-lock"></i></div>
                         <h4 class="fw-bold fs-5" data-en="Bank-Grade Compliance" data-bn="ব্যাংক-গ্রেড সিকিউরিটি">Bank-Grade Compliance</h4>
-                        <p class="text-muted fs-6" data-en="Encrypted API access and detailed audit trails for regulatory compliance." data-bn="সম্পূর্ণ এনক্রিপ্টেড ডাটা এবং বিস্তারিত অডিট ট্রেইল সুবিধা।">Encrypted API access and detailed audit trails for regulatory compliance.</p>
+                        <p class="fs-6 mb-0" data-en="Encrypted API access and detailed audit trails for regulatory compliance." data-bn="সম্পূর্ণ এনক্রিপ্টেড ডাটা এবং বিস্তারিত অডিট ট্রেইল সুবিধা।">Encrypted API access and detailed audit trails for regulatory compliance.</p>
                     </div>
                 </div>
             </div>
