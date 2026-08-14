@@ -16,6 +16,7 @@ app.secret_key = 'super_secret_fraudguard_key_12345'
 USER_FILE = 'users.json'
 
 def load_users():
+    """Load users from JSON file, with default pre-configured accounts"""
     if os.path.exists(USER_FILE):
         try:
             with open(USER_FILE, 'r') as f:
@@ -23,7 +24,9 @@ def load_users():
         except Exception as e:
             print(f"Error loading users.json: {e}")
     
+    # Default accounts that strictly follow the password policy
     default_users = {
+        "bushraislam01933@gmail.com": generate_password_hash("Bushra@123"),
         "abc@company.com": generate_password_hash("Abc@123"),
         "abc": generate_password_hash("Abc@123")
     }
@@ -31,8 +34,12 @@ def load_users():
     return default_users
 
 def save_users(users):
-    with open(USER_FILE, 'w') as f:
-        json.dump(users, f, indent=4)
+    """Save users dict to JSON file"""
+    try:
+        with open(USER_FILE, 'w') as f:
+            json.dump(users, f, indent=4)
+    except Exception as e:
+        print(f"Error saving users: {e}")
 
 
 # -------------------------------------------------------------
@@ -43,26 +50,20 @@ model = None
 
 if os.path.exists(CSV_PATH):
     try:
-        # 1. Read CSV File
         df = pd.read_csv(CSV_PATH)
-        
-        # 2. Separate Features (X) and Target (y)
-        # assuming the last column is the target (0 = Safe, 1 = Fraud)
         X = df.iloc[:, :-1]
         y = df.iloc[:, -1]
         
-        # 3. Train Random Forest Classifier in memory
         model = RandomForestClassifier(n_estimators=100, random_state=42)
         model.fit(X, y)
-        print("✅ ML Model successfully trained in-memory from CSV file!")
-        
+        print("✅ ML Model successfully trained in-memory from CSV!")
     except Exception as e:
         print(f"⚠️ CSV file read/train error: {e}")
-else:
-    print("⚠️ CSV file not found! Fallback rule-based logic will be used.")
 
 
-# Password Validation Function
+# -------------------------------------------------------------
+# Strict Password Validation Policy (Unchanged)
+# -------------------------------------------------------------
 def is_valid_password(password):
     if len(password) < 6:
         return False, "Password must be at least 6 characters long!"
@@ -81,7 +82,7 @@ def home():
     return render_template('index.html')
 
 
-# 2. Dashboard Page
+# 2. Main Dashboard (Protected)
 @app.route('/dashboard')
 def dashboard():
     if 'user' not in session:
@@ -90,17 +91,24 @@ def dashboard():
     return render_template('dashboard.html')
 
 
-# 3. Login Route
+# 3. Updated Login Route (Fixed Match Logic)
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email_or_user = request.form.get('email', '').strip()
+        # Space remove & Lowercase handled for easy login match
+        email_or_user = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '').strip()
 
         users_db = load_users()
-        stored_hash = users_db.get(email_or_user)
+        
+        # Match email case-insensitively from stored database
+        matched_user_hash = None
+        for key, stored_hash in users_db.items():
+            if key.lower() == email_or_user:
+                matched_user_hash = stored_hash
+                break
 
-        if stored_hash and check_password_hash(stored_hash, password):
+        if matched_user_hash and check_password_hash(matched_user_hash, password):
             session['user'] = email_or_user
             flash('Successfully logged in!', 'success')
             return redirect(url_for('dashboard'))
@@ -111,11 +119,11 @@ def login():
     return render_template('login.html')
 
 
-# 4. Register Route
+# 4. Register Route (Unchanged)
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        email = request.form.get('email', '').strip()
+        email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '').strip()
 
         users_db = load_users()
@@ -129,10 +137,11 @@ def register():
             flash(msg, 'danger')
             return redirect(url_for('register'))
 
+        # Save new user
         users_db[email] = generate_password_hash(password)
         save_users(users_db)
 
-        flash('Registration successful! Please sign in.', 'success')
+        flash('Registration successful! Please sign in with your credentials.', 'success')
         return redirect(url_for('login'))
 
     return render_template('register.html')
@@ -146,7 +155,7 @@ def logout():
     return redirect(url_for('login'))
 
 
-# 6. AI Prediction Route
+# 6. AI Prediction Endpoint
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
