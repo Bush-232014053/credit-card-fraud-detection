@@ -10,9 +10,6 @@ from sklearn.ensemble import RandomForestClassifier
 app = Flask(__name__)
 app.secret_key = 'super_secret_fraudguard_key_12345'
 
-# -------------------------------------------------------------
-# Permanent User Storage
-# -------------------------------------------------------------
 USER_FILE = 'users.json'
 
 def load_users():
@@ -24,7 +21,6 @@ def load_users():
         except Exception as e:
             print(f"Error loading users.json: {e}")
     
-    # Default accounts that strictly follow the password policy
     default_users = {
         "bushraislam01933@gmail.com": generate_password_hash("Bushra@123"),
         "abc@company.com": generate_password_hash("Abc@123"),
@@ -61,9 +57,6 @@ if os.path.exists(CSV_PATH):
         print(f"⚠️ CSV file read/train error: {e}")
 
 
-# -------------------------------------------------------------
-# Strict Password Validation Policy (Unchanged)
-# -------------------------------------------------------------
 def is_valid_password(password):
     if len(password) < 6:
         return False, "Password must be at least 6 characters long!"
@@ -76,13 +69,11 @@ def is_valid_password(password):
     return True, "Valid Password"
 
 
-# 1. Landing Page
 @app.route('/')
 def home():
     return render_template('index.html')
 
 
-# 2. Main Dashboard (Protected)
 @app.route('/dashboard')
 def dashboard():
     if 'user' not in session:
@@ -91,17 +82,14 @@ def dashboard():
     return render_template('dashboard.html')
 
 
-# 3. Updated Login Route (Fixed Match Logic)
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        # Space remove & Lowercase handled for easy login match
         email_or_user = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '').strip()
 
         users_db = load_users()
         
-        # Match email case-insensitively from stored database
         matched_user_hash = None
         for key, stored_hash in users_db.items():
             if key.lower() == email_or_user:
@@ -119,7 +107,6 @@ def login():
     return render_template('login.html')
 
 
-# 4. Register Route (Unchanged)
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -137,7 +124,6 @@ def register():
             flash(msg, 'danger')
             return redirect(url_for('register'))
 
-        # Save new user
         users_db[email] = generate_password_hash(password)
         save_users(users_db)
 
@@ -147,7 +133,6 @@ def register():
     return render_template('register.html')
 
 
-# 5. Logout Route
 @app.route('/logout')
 def logout():
     session.pop('user', None)
@@ -155,7 +140,6 @@ def logout():
     return redirect(url_for('login'))
 
 
-# 6. AI Prediction Endpoint
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
@@ -178,12 +162,24 @@ def predict():
             is_fraud = (amount > 1000) or (daily_limit_used > 80) or (distance_from_home > 200)
 
         if is_fraud:
-            return jsonify({'status': 'danger', 'prediction_text': '⚠️ Fraud Alert Detected!'})
+            return jsonify({
+                'status': 'danger',
+                'prediction_text_bn': '⚠️ জালিয়াতি সংকেত চিহ্নিত হয়েছে!',
+                'prediction_text_en': '⚠️ Fraud Alert Detected!'
+            })
         else:
-            return jsonify({'status': 'success', 'prediction_text': '✅ Transaction Safe & Approved.'})
+            return jsonify({
+                'status': 'success',
+                'prediction_text_bn': '✅ নিরাপদ লেনদেন।',
+                'prediction_text_en': '✅ Transaction Safe & Approved.'
+            })
 
     except Exception as e:
-        return jsonify({'status': 'danger', 'prediction_text': f"Server Error: {str(e)}"})
+        return jsonify({
+            'status': 'danger', 
+            'prediction_text_bn': f'ত্রুটি: {str(e)}',
+            'prediction_text_en': f'Error: {str(e)}'
+        }), 400
 
 
 if __name__ == '__main__':
