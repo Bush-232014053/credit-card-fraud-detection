@@ -318,33 +318,77 @@
                 this.innerHTML = '<i class="fa-solid fa-sun"></i>';
             }
         });
+        /**
+ * Asynchronous function to handle risk analysis requests.
+ * Sends form data to the backend API, updates UI alerts, and dynamically prepends
+ * the new transaction record to the history table.
+ */
+async function triggerAnalysis() {
+    // 1. Get DOM element references for the form, notification alert box, and table body
+    const form = document.getElementById('risk-form');
+    const formData = new FormData(form);
+    const resultBox = document.getElementById('result-alert');
+    const tableBody = document.querySelector('.table tbody');
 
-        // Asynchronous AI Prediction Request Function
-        async function triggerAnalysis() {
-            const form = document.getElementById('risk-form');
-            const formData = new FormData(form);
-            const resultBox = document.getElementById('result-alert');
+    // 2. Display the loading state indicator in the alert box
+    resultBox.style.display = 'block';
+    resultBox.className = 'alert alert-info mt-3 text-center fw-bold';
+    resultBox.innerText = currentLang === 'bn' ? 'বিশ্লেষণ করা হচ্ছে...' : 'Analyzing...';
 
-            resultBox.style.display = 'block';
-            resultBox.className = 'alert alert-info mt-3 text-center fw-bold';
-            resultBox.innerText = currentLang === 'bn' ? 'বিশ্লেষণ করা হচ্ছে...' : 'Analyzing...';
+    try {
+        // 3. Send asynchronous POST request to the prediction API endpoint
+        const response = await fetch('/predict', {
+            method: 'POST',
+            body: formData
+        });
+        
+        // Parse the JSON response returned from the server
+        const data = await response.json();
+        
+        // 4. Update the prediction alert banner based on API status
+        resultBox.className = `alert alert-${data.status} mt-3 text-center fw-bold`;
+        resultBox.innerText = currentLang === 'bn' ? data.prediction_text_bn : data.prediction_text_en;
 
-            try {
-                const response = await fetch('/predict', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                
-                resultBox.className = `alert alert-${data.status} mt-3 text-center fw-bold`;
-                resultBox.innerText = currentLang === 'bn' ? data.prediction_text_bn : data.prediction_text_en;
-            } catch (err) {
-                resultBox.className = 'alert alert-danger mt-3 text-center fw-bold';
-                resultBox.innerText = currentLang === 'bn' ? 'সার্ভারে সংযোগ করতে সমস্যা হয়েছে!' : 'Server Connection Error!';
-                console.error("Prediction Error:", err);
-            }
+        // 5. Extract input values from form data and generate a unique transaction ID
+        const amount = formData.get('Transaction_Amount') || '0';
+        const dist = formData.get('Distance_From_Home') || '0';
+        const limit = formData.get('Daily_Limit_Used') || '0';
+        const txId = '#TX-' + Math.floor(1000 + Math.random() * 9000);
+        
+        // Determine risk badge styling and multi-language status text
+        const isSafe = data.status === 'success'; 
+        const badgeClass = isSafe ? 'badge-safe' : 'badge-fraud';
+        
+        const statusTextEn = isSafe ? 'Safe' : 'Fraud Alert';
+        const statusTextBn = isSafe ? 'নিরাপদ' : 'জালিয়াতি সংকেত';
+        const currentStatusText = currentLang === 'bn' ? statusTextBn : statusTextEn;
+
+        // 6. Dynamically construct the new HTML table row with data attributes for language switching
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td>${txId}</td>
+            <td>$${parseFloat(amount).toFixed(2)}</td>
+            <td>${dist} km</td>
+            <td>${limit}%</td>
+            <td>
+                <span class="${badgeClass}" data-en="${statusTextEn}" data-bn="${statusTextBn}">
+                    ${currentStatusText}
+                </span>
+            </td>
+        `;
+
+        // 7. Insert the newly created row at the top of the history table
+        if (tableBody) {
+            tableBody.insertBefore(newRow, tableBody.firstChild);
         }
+
+    } catch (err) {
+        // Handle API failures, network interruptions, or server error responses
+        resultBox.className = 'alert alert-danger mt-3 text-center fw-bold';
+        resultBox.innerText = currentLang === 'bn' ? 'সার্ভারে সংযোগ করতে সমস্যা হয়েছে!' : 'Server Connection Error!';
+        console.error("Prediction Error:", err);
+    }
+}
     </script>
 </body>
 </html>
