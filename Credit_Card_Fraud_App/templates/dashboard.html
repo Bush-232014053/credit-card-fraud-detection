@@ -101,14 +101,13 @@
             </a>
             
             <div class="d-flex align-items-center gap-2">
-                <!-- Language Toggle Button (Shows Active Language BN initially) -->
                 <button id="lang-toggle-btn" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
                     <i class="fa-solid fa-globe me-1"></i><span id="lang-text">BN</span>
                 </button>
-                <!-- Dark Mode Toggle Button -->
                 <button id="theme-toggle-btn" class="btn btn-outline-secondary btn-sm rounded-pill px-2">
                     <i class="fa-solid fa-moon"></i>
                 </button>
+                <a href="/logout" class="btn btn-outline-danger btn-sm rounded-pill px-3 ms-2" data-en="Logout" data-bn="লগআউট">লগআউট</a>
             </div>
         </div>
     </nav>
@@ -158,40 +157,37 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label small" data-en="Transaction Amount ($)" data-bn="লেনদেনের পরিমাণ ($)">লেনদেনের পরিমাণ ($)</label>
-                                <input type="number" class="form-control" value="1150">
+                                <input type="number" class="form-control" name="Transaction_Amount" value="1150" step="any" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small" data-en="Time Since Last Tx (min)" data-bn="শেষ লেনদেনের সময় (মিনিট)">শেষ লেনদেনের সময় (মিনিট)</label>
-                                <input type="number" class="form-control" value="1">
+                                <input type="number" class="form-control" name="Time_Since_Last_Tx" value="1" step="any" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small" data-en="Distance From Last Tx (km)" data-bn="শেষ লেনদেন থেকে দূরত্ব (কিমি)">শেষ লেনদেন থেকে দূরত্ব (কিমি)</label>
-                                <input type="number" class="form-control" value="50">
+                                <input type="number" class="form-control" name="Distance_From_Last_Tx" value="50" step="any" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small" data-en="Distance From Home (km)" data-bn="বাড়ি থেকে দূরত্ব (কিমি)">বাড়ি থেকে দূরত্ব (কিমি)</label>
-                                <input type="number" class="form-control" value="40">
+                                <input type="number" class="form-control" name="Distance_From_Home" value="40" step="any" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small" data-en="Daily Limit Used (%)" data-bn="দৈনিক সীমা ব্যবহার (%)">দৈনিক সীমা ব্যবহার (%)</label>
-                                <input type="number" class="form-control" value="56">
+                                <input type="number" class="form-control" name="Daily_Limit_Used" value="56" step="any" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small" data-en="Card Age (days)" data-bn="কার্ডের মেয়াদ (দিন)">কার্ডের মেয়াদ (দিন)</label>
-                                <input type="number" class="form-control" value="36">
+                                <input type="number" class="form-control" name="Card_Age_Days" value="36" step="any" required>
                             </div>
                         </div>
 
-                        <!-- Analyze Risk Button -->
                         <button type="submit" id="analyze-btn" class="btn btn-primary w-100 mt-4">
                             <i class="fa-solid fa-microchip me-2"></i><span id="btn-text" data-en="Analyze Risk" data-bn="ঝুঁকি বিশ্লেষণ করুন">ঝুঁকি বিশ্লেষণ করুন</span>
                         </button>
                     </form>
 
-                    <!-- Alert Output Box -->
-                    <div id="result-alert" class="alert alert-danger mt-3 text-center fw-bold" style="display: block;" data-en="Fraud Alert Detected!" data-bn="জালিয়াতি সংকেত চিহ্নিত হয়েছে!">
-                        জালিয়াতি সংকেত চিহ্নিত হয়েছে!
-                    </div>
+                    <!-- Dynamic Alert Output Box -->
+                    <div id="result-alert" class="alert mt-3 text-center fw-bold" style="display: none;"></div>
                 </div>
             </div>
 
@@ -258,16 +254,16 @@
 
     </div>
 
-    <!-- JavaScript for Dynamic Logic -->
+    <!-- JavaScript Engine -->
     <script>
-        let currentLang = 'bn'; // Default active language is Bengali
+        let currentLang = 'bn';
 
         // Initialize Chart.js
         const ctx = document.getElementById('riskPieChart').getContext('2d');
         let riskPieChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['নিরাপদ লেনদেন', 'জালিয়াতি সংকেত'], // Initial Bengali Labels
+                labels: ['নিরাপদ লেনদেন', 'জালিয়াতি সংকেত'],
                 datasets: [{
                     data: [96.5, 3.5],
                     backgroundColor: ['#20c997', '#dc3545'],
@@ -290,25 +286,19 @@
             }
         });
 
-        // Fixed Toggle Language Function
+        // Toggle Language Function
         document.getElementById('lang-toggle-btn').addEventListener('click', function() {
-            // Switch current active language state
             currentLang = currentLang === 'bn' ? 'en' : 'bn';
-            
-            // Button label displays current active language
             document.getElementById('lang-text').innerText = currentLang === 'bn' ? 'BN' : 'EN';
             
-            // Translate All Text Elements
             document.querySelectorAll('[data-en][data-bn]').forEach(el => {
                 el.innerText = el.getAttribute(`data-${currentLang}`);
             });
 
-            // Translate All Search Input Placeholders
             document.querySelectorAll('[data-en-placeholder][data-bn-placeholder]').forEach(el => {
                 el.placeholder = el.getAttribute(`data-${currentLang}-placeholder`);
             });
 
-            // Update Chart.js Labels Correctly
             if (currentLang === 'bn') {
                 riskPieChart.data.labels = ['নিরাপদ লেনদেন', 'জালিয়াতি সংকেত'];
             } else {
@@ -329,10 +319,31 @@
             }
         });
 
-        // Trigger Analysis Simulation
-        function triggerAnalysis() {
+        // Asynchronous AI Prediction Request Function
+        async function triggerAnalysis() {
+            const form = document.getElementById('risk-form');
+            const formData = new FormData(form);
             const resultBox = document.getElementById('result-alert');
+
             resultBox.style.display = 'block';
+            resultBox.className = 'alert alert-info mt-3 text-center fw-bold';
+            resultBox.innerText = currentLang === 'bn' ? 'বিশ্লেষণ করা হচ্ছে...' : 'Analyzing...';
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                resultBox.className = `alert alert-${data.status} mt-3 text-center fw-bold`;
+                resultBox.innerText = currentLang === 'bn' ? data.prediction_text_bn : data.prediction_text_en;
+            } catch (err) {
+                resultBox.className = 'alert alert-danger mt-3 text-center fw-bold';
+                resultBox.innerText = currentLang === 'bn' ? 'সার্ভারে সংযোগ করতে সমস্যা হয়েছে!' : 'Server Connection Error!';
+                console.error("Prediction Error:", err);
+            }
         }
     </script>
 </body>
