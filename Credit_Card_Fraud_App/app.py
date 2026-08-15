@@ -47,12 +47,24 @@ model = None
 if os.path.exists(CSV_PATH):
     try:
         df = pd.read_csv(CSV_PATH)
-        X = df.iloc[:, :-1]
-        y = df.iloc[:, -1]
+        
+        # ফর্মের সাথে সম্পর্কিত প্রয়োজনীয় ৬টি কলাম বেছে নেওয়া হচ্ছে
+        feature_cols = [
+            'Transaction_Amount', 'Time_Since_Last_Tx', 'Distance_From_Last_Tx',
+            'Distance_From_Home', 'Daily_Limit_Used', 'Card_Age_Days'
+        ]
+        
+        # CSV-তে যদি নির্দিষ্ট কলামগুলো থাকে তবে সেগুলো দিয়ে, অন্যথায় প্রথম ৬টি কলাম দিয়ে X তৈরি হবে
+        if all(col in df.columns for col in feature_cols):
+            X = df[feature_cols]
+        else:
+            X = df.iloc[:, :6]
+            
+        y = df.iloc[:, -1] # সর্বশেষ কলামটি টার্গেট লেবেল (Is_Fraud)
         
         model = RandomForestClassifier(n_estimators=100, random_state=42)
         model.fit(X, y)
-        print("✅ ML Model successfully trained in-memory from CSV!")
+        print("✅ ML Model successfully trained in-memory with 6 features!")
     except Exception as e:
         print(f"⚠️ CSV file read/train error: {e}")
 
@@ -150,6 +162,7 @@ def predict():
         daily_limit_used = float(request.form.get('Daily_Limit_Used', 0))
         card_age_days = float(request.form.get('Card_Age_Days', 0))
 
+        # ইনপুট হিসেবে ঠিক ৬টি ফিচার পাঠানো হচ্ছে
         features = np.array([[
             amount, time_since_last_tx, distance_from_last_tx,
             distance_from_home, daily_limit_used, card_age_days
